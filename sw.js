@@ -1,33 +1,42 @@
 // sw.js — الرفيق: Service Worker للعمل دون اتصال بالإنترنت
-// النسخة 3: quran-local.json (114 سورة كاملة محلياً) يحل محل التخزين الاستباقي الجزئي السابق
-const CACHE_NAME = 'ar-rafeeq-v8';
-const TAFSIR_CACHE = 'ar-rafeeq-tafsir-v1'; // كاش دائم للتفسير الميسّر (نص ثابت لا يتغير)
+// النسخة 4: مُحسَّنة لتتوافق مع الواجهة الجديدة (SVG مضمّن) وتتحمّل أخطاء التحميل
+const CACHE_NAME = 'ar-rafeeq-v9';
+const TAFSIR_CACHE = 'ar-rafeeq-tafsir-v1'; // كاش دائم للتفسير الميسّر
 
-// كل ملفات التطبيق + النص الكامل للقرآن (quran-local.json) — تُخزَّن عند أول تثبيت
-// بعدها القرآن الكريم بأكمله متاح فوراً دون اتصال، وليس فقط جزء عمّ كما في الإصدار السابق
+// قائمة الملفات الأساسية التي يعتمد عليها التطبيق (بدون صور assets/ لأنها استُبدلت بـ SVG)
 const APP_SHELL = [
-  './', './index.html', './style.css',
-  './prayer.html', './azkar.html',
-  './arbaeen.html', './arbaeen-data.json',
-  './quran.html', './qibla.html', './hisnul.html',
+  './',
+  './index.html',
+  './style.css',
+  './prayer.html',
+  './azkar.html',
+  './arbaeen.html',
+  './arbaeen-data.json',
+  './quran.html',
+  './qibla.html',
+  './hisnul.html',
   './quran-local.json',
-  './audio/adhan.mp3',
-  './assets/medallion.png', './assets/quran.png', './assets/books.png',
-  './assets/tasbih.png', './assets/shield.png', './assets/sun.png',
-  './assets/topright.png', './assets/skyline.png', './assets/adhanmosque.png',
-  './assets/qibla_q.png', './assets/adiya_q.png', './assets/mawaqit_q.png', './assets/more_q.png',
-  './assets/nav_more.png', './assets/nav_hadith.png', './assets/nav_home.png',
-  './assets/nav_quran.png', './assets/nav_qibla.png'
+  './audio/adhan.mp3'
 ];
 
+// ----- التثبيت: تخزين APP_SHELL دون فشل كامل إذا تعذّر ملف واحد -----
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(APP_SHELL))
+      .then((cache) =>
+        Promise.allSettled(
+          APP_SHELL.map((url) =>
+            cache.add(url).catch((err) => {
+              console.warn('[SW] تعذّر تخزين ' + url, err);
+            })
+          )
+        )
+      )
       .then(() => self.skipWaiting())
   );
 });
 
+// ----- التنشيط: تنظيف الكاشات القديمة -----
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
@@ -40,15 +49,15 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+// ----- استراتيجيات التحميل حسب نوع المورد -----
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
   const isSameOrigin = url.origin === self.location.origin;
   const isTafsirApi = url.hostname === 'api.alquran.cloud';
   const isPrayerApi = url.hostname === 'api.aladhan.com';
 
+  // 1) موارد التطبيق المحلية (شبكة أولاً، مع تخزين في الكاش)
   if (isSameOrigin) {
-    // شبكة أولاً لملفات التطبيق (بما فيها quran-local.json نفسه، لتحديثه إن غُيِّر مستقبلاً)
-    // مع سقوط فوري للكاش عند انعدام الاتصال — وهذا ما يجعل القرآن يعمل دون إنترنت من أول استخدام
     event.respondWith(
       fetch(event.request)
         .then((response) => {
@@ -61,8 +70,8 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // 2) التفسير الميسّر (كاش أولاً لأنه ثابت)
   if (isTafsirApi) {
-    // كاش أولاً — نص التفسير الميسّر ثابت ولا يتغير، فالتخزين الدائم صحيح هنا
     event.respondWith(
       caches.match(event.request).then((cached) => {
         if (cached) return cached;
@@ -76,8 +85,8 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // 3) مواقيت الصلاة (شبكة أولاً إلزامياً لأنها تتغير)
   if (isPrayerApi) {
-    // شبكة أولاً إلزامياً — مواقيت الصلاة تتغيّر يومياً، فلا يصح تخزينها بشكل دائم
     event.respondWith(
       fetch(event.request)
         .then((response) => {
@@ -90,7 +99,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // أي طلب خارجي آخر (خطوط Google Fonts مثلاً): كاش أولاً بسيط
+  // 4) أي طلب خارجي آخر (خطوط Google، أيقونات...): كاش أولاً بسيط
   event.respondWith(
     caches.match(event.request).then((cached) => cached || fetch(event.request))
   );
