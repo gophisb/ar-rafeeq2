@@ -1,0 +1,24 @@
+{
+  "name": "الرفيق - Rafeeq",
+  "short_name": "الرفيق",
+  "description": "تطبيق إسلامي شامل: مواقيت الصلاة، الأذان، القرآن، الأذكار، القبلة",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#080B10",
+  "theme_color": "#0F5C3E",
+  "orientation": "any",
+  "dir": "rtl",
+  "lang": "ar",
+  "icons": [
+    {
+      "src": "./icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "./icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
