@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مواقيت الصلاة — الرفيق</title>
+<link rel="stylesheet" href="./style.css">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🕌</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  .container{max-width:720px;margin:0 auto;padding:16px;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 0;}
+  .back{color:var(--primary);text-decoration:none;font-size:14px;font-weight:600;}
+  h1{text-align:center;font-size:26px;color:var(--primary);margin:6px 0 2px;}
+  .sub{text-align:center;color:#888;font-size:14px;margin-bottom:18px;}
+
+  /* تذكيرات لطيفة (جمعة / ثلث الليل / صمت) */
+  .gentle-note{background:#fff9ec;border:1px solid rgba(184,134,11,0.25);border-radius:14px;
+    padding:12px 16px;margin-bottom:14px;font-size:13.5px;color:#7a5c10;display:flex;gap:10px;
+    align-items:flex-start;}
+  .gentle-note .ic{flex-shrink:0;font-size:18px;}
+  .gentle-note.silent{background:#f3faf9;border-color:rgba(13,107,110,0.2);color:#0d6b6e;}
+
+  .hero{
+    background:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cg fill='none' stroke='%23ffffff' stroke-width='0.7' opacity='0.10'%3E%3Cpolygon points='100,20 137,63 180,70 150,105 158,150 100,130 42,150 50,105 20,70 63,63'/%3E%3Ccircle cx='100' cy='100' r='75'/%3E%3C/g%3E%3C/svg%3E") left -40px top -30px/240px no-repeat,
+      linear-gradient(160deg,var(--primary),var(--primary-dark));
+    color:#fff;border-radius:22px;padding:26px 22px;margin:18px 0;
+    position:relative;overflow:hidden;box-shadow:0 8px 24px rgba(13,107,110,0.25);
+    transition:background .6s;
+  }
+  .hero.ramadan{
+    background:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cg fill='%23ffffff' opacity='0.10'%3E%3Cpath d='M120 40 A70 70 0 1 0 120 160 A55 55 0 1 1 120 40 Z'/%3E%3Ccircle cx='150' cy='55' r='4'/%3E%3C/g%3E%3C/svg%3E") left -30px top -20px/220px no-repeat,
+      linear-gradient(160deg,#5b3a8e,#2e1f52);
+  }
+  .hero .hijri{font-size:15px;opacity:0.9;margin-bottom:4px;}
+  .hero .gregorian{font-size:13px;opacity:0.7;margin-bottom:16px;}
+  .next-prayer-label{font-size:13px;opacity:0.85;}
+  .next-prayer-name{font-size:32px;font-weight:800;margin:4px 0;}
+  .countdown{font-size:22px;font-weight:700;color:#ffe9a8;letter-spacing:1px;font-variant-numeric:tabular-nums;}
+  .ramadan-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,0.15);
+    border-radius:99px;padding:4px 12px;font-size:12px;margin-top:12px;}
+
+  .iftar-suhoor{display:flex;gap:10px;margin-top:14px;}
+  .is-box{flex:1;background:rgba(255,255,255,0.12);border-radius:12px;padding:10px 12px;text-align:center;}
+  .is-box .lbl{font-size:11px;opacity:0.8;}
+  .is-box .val{font-size:16px;font-weight:800;margin-top:2px;}
+
+  .city-selector{background:var(--card);border:1px solid var(--line);border-radius:16px;
+    padding:14px 16px;margin-bottom:16px;}
+  .city-selector label{font-size:12.5px;color:#999;display:block;margin-bottom:8px;}
+  .select-wrap{position:relative;}
+  .select-wrap::after{content:'▾';position:absolute;left:14px;top:50%;transform:translateY(-50%);
+    color:var(--primary);pointer-events:none;font-size:14px;}
+  select#citySelect{
+    width:100%;appearance:none;-webkit-appearance:none;background:#f9f9f9;
+    border:1px solid var(--line);border-radius:12px;padding:12px 40px 12px 14px;
+    font-size:15px;font-family:inherit;color:var(--text);font-weight:600;
+  }
+  .wilaya-count{font-size:11px;color:#bbb;margin-top:8px;}
+
+  .timings{background:var(--card);border-radius:var(--radius);border:1px solid var(--line);
+    box-shadow:0 1px 3px rgba(0,0,0,0.05); overflow:hidden; margin-bottom:16px;}
+  .prow{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;
+    border-bottom:1px solid var(--line);}
+  .prow:last-child{border-bottom:none;}
+  .prow.current{background:#f3faf9;}
+  .prow.adhan-now{background:#fff7e0;}
+  .pname{display:flex;align-items:center;gap:10px;font-weight:600;color:var(--primary);}
+  .pname .ic{font-size:20px;}
+  .ptime{font-size:19px;font-weight:700;color:var(--gold);font-variant-numeric:tabular-nums;}
+
+  /* إعدادات الأذان */
+  .adhan-settings{background:var(--card);border:1px solid var(--line);border-radius:16px;
+    padding:14px 16px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;
+    gap:12px;flex-wrap:wrap;}
+  .adhan-settings .lbl{font-size:14px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:8px;}
+  .toggle{position:relative;width:46px;height:26px;border-radius:99px;background:#ddd;cursor:pointer;
+    transition:.2s;flex-shrink:0;}
+  .toggle.on{background:var(--primary);}
+  .toggle::after{content:'';position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;
+    background:#fff;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,0.3);}
+  .toggle.on::after{transform:translateX(-20px);}
+  .volume-row{display:flex;align-items:center;gap:10px;width:100%;}
+  .volume-row input[type=range]{flex:1;accent-color:var(--primary);}
+
+  #status{text-align:center;color:#888;padding:30px 0;}
+  footer{text-align:center;padding:24px 0 10px;color:#aaa;font-size:12px;}
+
+  /* نافذة دعاء ما بعد الأذان */
+  .dua-overlay{position:fixed;inset:0;background:rgba(10,20,20,0.72);display:none;
+    align-items:center;justify-content:center;z-index:999;padding:20px;
+    backdrop-filter:blur(3px);}
+  .dua-overlay.show{display:flex;}
+  .dua-modal{background:linear-gradient(160deg,#11302f,#0a1e1d);border:1px solid rgba(212,175,55,0.35);
+    border-radius:22px;padding:30px 24px;max-width:420px;width:100%;text-align:center;
+    box-shadow:0 20px 60px rgba(0,0,0,0.5);}
+  .dua-modal .cap{font-size:13px;color:#b8860b;margin-bottom:14px;letter-spacing:0.05em;}
+  .dua-modal .txt{font-family:'Amiri',serif;font-size:21px;line-height:2;color:#f5f1e6;margin-bottom:20px;}
+  .dua-modal button{background:#b8860b;color:#1a1a1a;border:none;border-radius:99px;
+    padding:11px 32px;font-size:14px;font-weight:700;cursor:pointer;}
+
+  @media (max-width:600px){
+    .next-prayer-name{font-size:26px;}
+    .countdown{font-size:18px;}
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="topbar">
+    <a class="back" href="./index.html">→ الرئيسية</a>
+    <span style="font-size:22px;">📅</span>
+  </div>
+  <h1>مواقيت الصلاة</h1>
+  <p class="sub">دقّة الحساب حسب موقعك ومدينتك</p>
+
+  <div class="gentle-note" id="fridayNote" hidden>
+    <span class="ic">🕌</span>
+    <span>اليوم جمعة — أكثِر من الصلاة على النبي ﷺ، ولا تنسَ قراءة سورة الكهف.</span>
+  </div>
+  <div class="gentle-note" id="lastThirdNote" hidden>
+    <span class="ic">🌌</span>
+    <span>دخل الثلث الأخير من الليل — وقت فضيل للدعاء والاستغفار.</span>
+  </div>
+  <div class="gentle-note silent" id="silentReminder" hidden>
+    <span class="ic">🔕</span>
+    <span>اقترب وقت الصلاة — يُستحسن وضع الهاتف على الصامت والاستعداد بالوضوء.</span>
+  </div>
+
+  <div class="city-selector">
+    <label>اختر الولاية (69 ولاية — التقسيم الإداري المحدَّث 2026)</label>
+    <div class="select-wrap">
+      <select id="citySelect"></select>
+    </div>
+    <div class="wilaya-count">تشمل القائمة الولايات الـ11 المستحدثة في 2026</div>
+  </div>
+
+  <div id="status">جاري تحديد المواقيت...</div>
+
+  <div class="hero" id="hero" hidden>
+    <div class="hijri" id="hijriDate"></div>
+    <div class="gregorian" id="gregDate"></div>
+    <div class="next-prayer-label">الصلاة القادمة</div>
+    <div class="next-prayer-name" id="nextName">—</div>
+    <div class="countdown" id="countdown">—</div>
+    <div class="ramadan-badge" id="ramadanBadge" hidden>🌙 رمضان مبارك</div>
+    <div class="iftar-suhoor" id="iftarSuhoor" hidden>
+      <div class="is-box"><div class="lbl">الإفطار (المغرب)</div><div class="val" id="iftarTime">—</div></div>
+      <div class="is-box"><div class="lbl">السحور (قبل الفجر)</div><div class="val" id="suhoorTime">—</div></div>
+    </div>
+  </div>
+
+  <div class="timings" id="timings" hidden></div>
+
+  <div class="adhan-settings" id="adhanSettings" hidden>
+    <div class="lbl">🔊 تشغيل الأذان تلقائياً</div>
+    <div class="toggle" id="adhanToggle"></div>
+    <div class="volume-row">
+      <span style="font-size:12px;color:#999;">مستوى الصوت</span>
+      <input type="range" id="volumeSlider" min="0" max="100" value="80">
+    </div>
+  </div>
+
+  <footer>الرفيق — مواقيت الصلاة (طريقة الحساب: رابطة العالم الإسلامي)</footer>
+</div>
+
+<audio id="adhanAudio" src="./audio/adhan.mp3" preload="auto"></audio>
+
+<div class="dua-overlay" id="duaOverlay">
+  <div class="dua-modal">
+    <div class="cap">🤲 دعاء ما بعد الأذان</div>
+    <div class="txt">
+      اللَّهُمَّ رَبَّ هَذِهِ الدَّعْوَةِ التَّامَّةِ، وَالصَّلَاةِ الْقَائِمَةِ، آتِ مُحَمَّداً الْوَسِيلَةَ وَالْفَضِيلَةَ،
+      وَابْعَثْهُ مَقَاماً مَحْمُوداً الَّذِي وَعَدْتَهُ، إِنَّكَ لَا تُخْلِفُ الْمِيعَادَ
+    </div>
+    <button id="duaCloseBtn">تم 🤍</button>
+  </div>
+</div>
+
+<script>
+// ===== قائمة الولايات (69 ولاية) =====
+const WILAYAS = [
+  {n:1,name:'أدرار',city:'Adrar'},{n:2,name:'الشلف',city:'Chlef'},
+  {n:3,name:'الأغواط',city:'Laghouat'},{n:4,name:'أم البواقي',city:'Oum El Bouaghi'},
+  {n:5,name:'باتنة',city:'Batna'},{n:6,name:'بجاية',city:'Bejaia'},
+  {n:7,name:'بسكرة',city:'Biskra'},{n:8,name:'بشار',city:'Bechar'},
+  {n:9,name:'البليدة',city:'Blida'},{n:10,name:'البويرة',city:'Bouira'},
+  {n:11,name:'تمنراست',city:'Tamanrasset'},{n:12,name:'تبسة',city:'Tebessa'},
+  {n:13,name:'تلمسان',city:'Tlemcen'},{n:14,name:'تيارت',city:'Tiaret'},
+  {n:15,name:'تيزي وزو',city:'Tizi Ouzou'},{n:16,name:'الجزائر العاصمة',city:'Algiers'},
+  {n:17,name:'الجلفة',city:'Djelfa'},{n:18,name:'جيجل',city:'Jijel'},
+  {n:19,name:'سطيف',city:'Setif'},{n:20,name:'سعيدة',city:'Saida'},
+  {n:21,name:'سكيكدة',city:'Skikda'},{n:22,name:'سيدي بلعباس',city:'Sidi Bel Abbes'},
+  {n:23,name:'عنابة',city:'Annaba'},{n:24,name:'قالمة',city:'Guelma'},
+  {n:25,name:'قسنطينة',city:'Constantine'},{n:26,name:'المدية',city:'Medea'},
+  {n:27,name:'مستغانم',city:'Mostaganem'},{n:28,name:"المسيلة",city:"M'Sila"},
+  {n:29,name:'معسكر',city:'Mascara'},{n:30,name:'ورقلة',city:'Ouargla'},
+  {n:31,name:'وهران',city:'Oran'},{n:32,name:'البيض',city:'El Bayadh'},
+  {n:33,name:'إليزي',city:'Illizi'},{n:34,name:'برج بوعريريج',city:'Bordj Bou Arreridj'},
+  {n:35,name:'بومرداس',city:'Boumerdes'},{n:36,name:'الطارف',city:'El Tarf'},
+  {n:37,name:'تندوف',city:'Tindouf'},{n:38,name:'تيسمسيلت',city:'Tissemsilt'},
+  {n:39,name:'الوادي',city:'El Oued'},{n:40,name:'خنشلة',city:'Khenchela'},
+  {n:41,name:'سوق أهراس',city:'Souk Ahras'},{n:42,name:'تيبازة',city:'Tipaza'},
+  {n:43,name:'ميلة',city:'Mila'},{n:44,name:'عين الدفلى',city:'Ain Defla'},
+  {n:45,name:'النعامة',city:'Naama'},{n:46,name:'عين تموشنت',city:'Ain Temouchent'},
+  {n:47,name:'غرداية',city:'Ghardaia'},{n:48,name:'غليزان',city:'Relizane'},
+  {n:49,name:'تيميمون',city:'Timimoun'},{n:50,name:'برج باجي مختار',city:'Bordj Badji Mokhtar'},
+  {n:51,name:'أولاد جلال',city:'Ouled Djellal'},{n:52,name:'بني عباس',city:'Beni Abbes'},
+  {n:53,name:'عين صالح',city:'In Salah'},{n:54,name:'عين قزام',city:'In Guezzam'},
+  {n:55,name:'تقرت',city:'Touggourt'},{n:56,name:'جانت',city:'Djanet'},
+  {n:57,name:"المغير",city:"El M'Ghair"},{n:58,name:'المنيعة',city:'El Meniaa'},
+  {n:59,name:'آفلو',city:'Aflou'},{n:60,name:'بريكة',city:'Barika'},
+  {n:61,name:'القنطرة',city:'El Kantara'},{n:62,name:'بئر العاتر',city:'Bir El Ater'},
+  {n:63,name:'العريشة',city:'El Aricha'},{n:64,name:'قصر الشلالة',city:'Ksar Chellala'},
+  {n:65,name:'عين وسارة',city:'Ain Oussara'},{n:66,name:'مسعد',city:'Messaad'},
+  {n:67,name:'قصر البخاري',city:'Ksar El Boukhari'},{n:68,name:'بوسعادة',city:'Bou Saada'},
+  {n:69,name:'الأبيض سيدي الشيخ',city:'El Abiodh Sidi Cheikh'}
+];
+
+function buildSelect(){
+  const sel = document.getElementById('citySelect');
+  const og1 = document.createElement('optgroup'); og1.label = 'الولايات (1–58)';
+  const og2 = document.createElement('optgroup'); og2.label = 'الولايات المستحدثة 2026 (59–69)';
+  WILAYAS.forEach(w=>{
+    const opt = document.createElement('option');
+    opt.value = w.n; opt.textContent = `${w.n} — ${w.name}`;
+    (w.n <= 58 ? og1 : og2).appendChild(opt);
+  });
+  sel.appendChild(og1); sel.appendChild(og2);
+  sel.value = 16;
+  sel.addEventListener('change', ()=> loadTimings(parseInt(sel.value,10)));
+}
+
+// ===== إعدادات الأذان (محفوظة محلياً على جهاز المستخدم فقط) =====
+const ADHAN_KEY = 'rafeeq_adhan_enabled';
+const VOLUME_KEY = 'rafeeq_adhan_volume';
+let adhanEnabled = localStorage.getItem(ADHAN_KEY) !== 'false'; // مفعّل افتراضياً
+let adhanVolume = parseInt(localStorage.getItem(VOLUME_KEY) || '80', 10);
+let playedToday = {}; // يمنع تكرار تشغيل نفس الأذان أكثر من مرة في نفس اليوم
+
+const adhanAudio = document.getElementById('adhanAudio');
+adhanAudio.volume = adhanVolume / 100;
+adhanAudio.addEventListener('ended', showDuaModal);
+
+function initAdhanSettings(){
+  const toggle = document.getElementById('adhanToggle');
+  const slider = document.getElementById('volumeSlider');
+  toggle.classList.toggle('on', adhanEnabled);
+  slider.value = adhanVolume;
+
+  toggle.addEventListener('click', ()=>{
+    adhanEnabled = !adhanEnabled;
+    toggle.classList.toggle('on', adhanEnabled);
+    localStorage.setItem(ADHAN_KEY, adhanEnabled);
+  });
+  slider.addEventListener('input', (e)=>{
+    adhanVolume = parseInt(e.target.value, 10);
+    adhanAudio.volume = adhanVolume / 100;
+    localStorage.setItem(VOLUME_KEY, adhanVolume);
+  });
+}
+
+function showDuaModal(){
+  document.getElementById('duaOverlay').classList.add('show');
+  const autoDismiss = setTimeout(closeDua, 40000); // إغلاق تلقائي بعد 40 ثانية إن لم يتفاعل المستخدم
+  document.getElementById('duaCloseBtn').onclick = ()=>{ clearTimeout(autoDismiss); closeDua(); };
+}
+function closeDua(){ document.getElementById('duaOverlay').classList.remove('show'); }
+
+// ===== تذكير يوم الجمعة =====
+function checkFriday(){
+  document.getElementById('fridayNote').hidden = (new Date().getDay() !== 5);
+}
+
+let timingsCache = null;
+
+function loadTimings(wilayaNum){
+  document.getElementById('hero').hidden = true;
+  document.getElementById('timings').hidden = true;
+  document.getElementById('adhanSettings').hidden = true;
+  document.getElementById('status').hidden = false;
+  document.getElementById('status').textContent = 'جاري تحديد المواقيت...';
+
+  const w = WILAYAS.find(x=>x.n === wilayaNum);
+  fetch(`https://api.aladhan.com/v1/timingsByCity?city=${encodeURIComponent(w.city)}&country=Algeria&method=19`)
+    .then(r=>r.json())
+    .then(data=>{
+      if(data.code !== 200) throw new Error('bad response');
+      timingsCache = data.data;
+      renderTimings(data.data);
+      document.getElementById('status').hidden = true;
+      document.getElementById('hero').hidden = false;
+      document.getElementById('timings').hidden = false;
+      document.getElementById('adhanSettings').hidden = false;
+    })
+    .catch(()=>{
+      document.getElementById('status').textContent =
+        'تعذّر جلب مواقيت هذه الولاية. جرّب ولاية أخرى، أو تحقق من الاتصال بالإنترنت.';
+    });
+}
+
+function toMinutes(s){ const [h,m] = s.split(':').map(Number); return h*60+m; }
+
+function renderTimings(data){
+  const t = data.timings;
+  const hijri = data.date.hijri;
+  const greg = data.date.gregorian;
+  const isRamadan = parseInt(hijri.month.number, 10) === 9;
+
+  document.getElementById('hijriDate').innerHTML =
+    `${hijri.weekday.ar} — ${hijri.day} ${hijri.month.ar} ${hijri.year} هـ`;
+  document.getElementById('gregDate').textContent =
+    `${greg.day} ${greg.month.en} ${greg.year} م`;
+
+  // ===== وضع رمضان: الهلال بدل النجمة + الإفطار والسحور (مواقيت الصلاة نفسها لا تتغير) =====
+  const hero = document.getElementById('hero');
+  hero.classList.toggle('ramadan', isRamadan);
+  document.getElementById('ramadanBadge').hidden = !isRamadan;
+  document.getElementById('iftarSuhoor').hidden = !isRamadan;
+  if(isRamadan){
+    document.getElementById('iftarTime').textContent = t.Maghrib;
+    // السحور: قبل الفجر بـ20 دقيقة تقريباً (وقت آمان احترازي شائع)، وليس وقت الفجر نفسه
+    const suhoorMin = toMinutes(t.Fajr) - 20;
+    const hh = Math.floor(((suhoorMin%1440)+1440)%1440/60), mm = ((suhoorMin%1440)+1440)%1440%60;
+    document.getElementById('suhoorTime').textContent = `${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`;
+  }
+
+  const prayers = [
+    {name:'الفجر', ic:'🌅', key:'Fajr', adhan:true},
+    {name:'الشروق', ic:'☀️', key:'Sunrise', adhan:false},
+    {name:'الظهر', ic:'🌤️', key:'Dhuhr', adhan:true},
+    {name:'العصر', ic:'🌇', key:'Asr', adhan:true},
+    {name:'المغرب', ic:'🌆', key:'Maghrib', adhan:true},
+    {name:'العشاء', ic:'🌙', key:'Isha', adhan:true},
+  ];
+
+  const now = new Date();
+  const nowMinutes = now.getHours()*60 + now.getMinutes();
+  let nextIdx = -1;
+  for(let i=0;i<prayers.length;i++){
+    if(prayers[i].key === 'Sunrise') continue;
+    if(toMinutes(t[prayers[i].key]) > nowMinutes){ nextIdx = i; break; }
+  }
+
+  let html = '';
+  prayers.forEach((p,i)=>{
+    const isCurrent = i === nextIdx;
+    html += `
+      <div class="prow ${isCurrent?'current':''}" data-key="${p.key}">
+        <div class="pname"><span class="ic">${p.ic}</span> ${p.name}</div>
+        <div class="ptime">${t[p.key]}</div>
+      </div>`;
+  });
+  document.getElementById('timings').innerHTML = html;
+
+  if(nextIdx === -1){
+    document.getElementById('nextName').textContent = 'الفجر (غداً)';
+    startCountdown(toMinutes(t.Fajr) + 24*60);
+  }else{
+    document.getElementById('nextName').textContent = prayers[nextIdx].name;
+    startCountdown(toMinutes(t[prayers[nextIdx].key]));
+  }
+
+  // ===== تذكير الثلث الأخير من الليل (المغرب → فجر الغد) ÷ 3 =====
+  computeLastThird(t.Maghrib, t.Fajr);
+
+  // ===== فحص أوقات الأذان كل ثانية =====
+  startAdhanWatcher(t, prayers);
+}
+
+let countdownTimer = null;
+function startCountdown(targetMinutesFromMidnight){
+  if(countdownTimer) clearInterval(countdownTimer);
+  function tick(){
+    const now = new Date();
+    let nowSec = now.getHours()*3600 + now.getMinutes()*60 + now.getSeconds();
+    let targetSec = targetMinutesFromMidnight*60;
+    let diff = targetSec - nowSec;
+    if(diff < 0) diff += 24*3600;
+    const h = Math.floor(diff/3600), m = Math.floor((diff%3600)/60), s = diff%60;
+    document.getElementById('countdown').textContent =
+      `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+
+    // تذكير الصمت: يظهر في آخر 7 دقائق قبل أي صلاة (وليس فقط القادمة المعروضة، بل عبر مراقب الأذان أدناه أيضاً)
+    document.getElementById('silentReminder').hidden = diff > 420 || diff < 1;
+  }
+  tick();
+  countdownTimer = setInterval(tick, 1000);
+}
+
+let lastThirdTimer = null;
+function computeLastThird(maghribStr, fajrStr){
+  if(lastThirdTimer) clearInterval(lastThirdTimer);
+  const now = new Date();
+  const maghrib = new Date(now); const [mh,mm] = maghribStr.split(':').map(Number);
+  maghrib.setHours(mh, mm, 0, 0);
+  const fajrNext = new Date(now); const [fh,fm] = fajrStr.split(':').map(Number);
+  fajrNext.setDate(fajrNext.getDate() + (now < maghrib ? 0 : 1));
+  fajrNext.setHours(fh, fm, 0, 0);
+  if(fajrNext <= maghrib) fajrNext.setDate(fajrNext.getDate()+1);
+
+  const nightDuration = fajrNext - maghrib;
+  const lastThirdStart = new Date(maghrib.getTime() + (2/3)*nightDuration);
+
+  function tick(){
+    const n = new Date();
+    document.getElementById('lastThirdNote').hidden = !(n >= lastThirdStart && n < fajrNext);
+  }
+  tick();
+  lastThirdTimer = setInterval(tick, 30000);
+}
+
+let adhanWatcher = null;
+function startAdhanWatcher(t, prayers){
+  if(adhanWatcher) clearInterval(adhanWatcher);
+  const todayKey = new Date().toDateString();
+  if(playedToday.date !== todayKey){ playedToday = {date: todayKey}; }
+
+  adhanWatcher = setInterval(()=>{
+    if(!adhanEnabled) return;
+    const now = new Date();
+    const hhmm = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+    prayers.forEach(p=>{
+      if(!p.adhan) return;
+      if(t[p.key] === hhmm && playedToday[p.key] !== todayKey){
+        playedToday[p.key] = todayKey;
+        adhanAudio.currentTime = 0;
+        adhanAudio.play().catch(()=>{ /* المتصفح قد يمنع التشغيل التلقائي دون تفاعل سابق من المستخدم */ });
+      }
+    });
+  }, 1000);
+}
+
+buildSelect();
+initAdhanSettings();
+checkFriday();
+loadTimings(16);
+</script>
+</body>
+</html>
