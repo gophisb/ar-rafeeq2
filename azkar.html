@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>الأذكار — الرفيق</title>
+<link rel="stylesheet" href="./style.css">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🕌</text></svg>">
+<style>
+  .container{max-width:720px;margin:0 auto;padding:16px;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 0;}
+  .back{color:var(--primary);text-decoration:none;font-size:14px;font-weight:600;}
+  h1{text-align:center;font-size:26px;color:var(--primary);margin:6px 0 2px;}
+  .sub{text-align:center;color:#888;font-size:14px;margin-bottom:18px;}
+
+  .tabs{display:flex;background:var(--card);border-radius:14px;padding:4px;
+    border:1px solid var(--line);margin-bottom:18px;}
+  .tab{flex:1;text-align:center;padding:10px;border-radius:10px;cursor:pointer;
+    font-weight:700;color:#999;transition:.2s;}
+  .tab.active{background:var(--primary);color:#fff;}
+
+  .progress-wrap{background:var(--card);border-radius:14px;border:1px solid var(--line);
+    padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:14px;}
+  .progress-bar{flex:1;height:8px;background:#eee;border-radius:99px;overflow:hidden;}
+  .progress-fill{height:100%;background:var(--primary);width:0%;transition:width .3s;}
+  .progress-text{font-size:13px;color:#888;white-space:nowrap;}
+
+  .zikr-card{background:var(--card);border-radius:var(--radius);border:1px solid var(--line);
+    box-shadow:0 1px 3px rgba(0,0,0,0.05);padding:20px;margin-bottom:14px;
+    transition:.2s; cursor:pointer; user-select:none; -webkit-user-select:none;}
+  .zikr-card:active{transform:scale(0.98);}
+  .zikr-card.done{opacity:0.55;}
+  .zikr-text{font-size:18px;font-weight:600;color:var(--text);margin-bottom:10px;}
+  .zikr-meta{display:flex;justify-content:space-between;align-items:center;}
+  .zikr-source{font-size:13px;color:#888;}
+  .zikr-virtue{background:#f9f9f9;border-right:4px solid var(--gold);border-radius:8px;
+    padding:10px 14px;margin-top:10px;font-size:14px;color:#555;}
+  .counter{display:flex;align-items:center;gap:10px;}
+  .counter .count-num{font-size:22px;font-weight:800;color:var(--primary);min-width:32px;text-align:center;}
+  .counter .count-target{font-size:13px;color:#aaa;}
+  .tap-hint{font-size:11px;color:#bbb;margin-top:8px;text-align:center;}
+
+  .reset-btn{display:block;margin:18px auto;background:none;border:1px solid var(--line);
+    color:#888;padding:8px 20px;border-radius:99px;font-size:13px;cursor:pointer;}
+  footer{text-align:center;padding:24px 0 10px;color:#aaa;font-size:12px;}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="topbar">
+    <a class="back" href="./index.html">→ الرئيسية</a>
+    <span style="font-size:22px;">🌅</span>
+  </div>
+  <h1>الأذكار</h1>
+  <p class="sub">أذكار الصباح والمساء — اضغط على كل ذكر لعدّه</p>
+
+  <div class="tabs">
+    <div class="tab active" data-t="morning">🌅 الصباح</div>
+    <div class="tab" data-t="evening">🌙 المساء</div>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-text" id="progressText">0 / 0</div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  </div>
+
+  <div id="list"></div>
+
+  <button class="reset-btn" id="resetBtn">↺ إعادة تعيين العدّادات</button>
+  <footer>الرفيق — حصون الذكر من الصباح إلى المساء</footer>
+</div>
+
+<script>
+const AZKAR_DATA = {"morning": [{"id": 1, "text": "أَصْبَحْنَا وَأَصْبَحَ الْمُلْكُ لِلَّهِ رَبِّ الْعَالَمِينَ", "count": 1, "source": "رواه مسلم", "grade": "صحيح"}, {"id": 2, "text": "اللَّهُمَّ بِكَ أَصْبَحْنَا وَبِكَ أَمْسَيْنَا وَبِكَ نَحْيَا وَبِكَ نَمُوتُ وَإِلَيْكَ النُّشُور", "count": 1, "source": "رواه الترمذي", "grade": "حسن"}, {"id": 3, "text": "لا إِلَهَ إِلاَّ اللَّهُ وَحْدَهُ لا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ", "count": 10, "source": "رواه البخاري", "grade": "صحيح", "virtue": "من قالها عشر مرات كان كمن أعتق رقبة"}, {"id": 4, "text": "سُبْحَانَ اللَّهِ وَبِحَمْدِهِ، سُبْحَانَ اللَّهِ الْعَظِيمِ", "count": 100, "source": "رواه مسلم", "grade": "صحيح", "virtue": "من قالها غفرت له ذنوبه ولو كانت أكثر من زبد البحر"}, {"id": 5, "text": "اللَّهُمَّ إِنِّي أَسْأَلُكَ عِلْماً نَافِعاً وَرِزْقاً طَيِّباً وَعَمَلاً مُتَقَبَّلاً", "count": 1, "source": "رواه ابن ماجه", "grade": "حسن"}, {"id": 6, "text": "اللَّهُمَّ عَافِنِي فِي بَدَنِي، اللَّهُمَّ عَافِنِي فِي سَمْعِي، اللَّهُمَّ عَافِنِي فِي بَصَرِي", "count": 3, "source": "رواه أبو داود", "grade": "صحيح"}, {"id": 7, "text": "أَعُوذُ بِاللَّهِ مِنَ الشَّيْطَانِ الرَّجِيمِ", "count": 1, "source": "رواه البخاري", "grade": "صحيح"}, {"id": 8, "text": "بِسْمِ اللَّهِ الَّذِي لا يَضُرُّ مَعَ اسْمِهِ شَيْءٌ فِي الأَرْضِ وَلا فِي السَّمَاءِ وَهُوَ السَّمِيعُ الْعَلِيمُ", "count": 3, "source": "رواه الترمذي", "grade": "حسن", "virtue": "من قالها لم يضره شيء"}, {"id": 9, "text": "الْحَمْدُ لِلَّهِ حَمْداً كَثِيراً طَيِّباً مُبَارَكاً فِيهِ", "count": 1, "source": "رواه مسلم", "grade": "صحيح"}, {"id": 10, "text": "يَا حَيُّ يَا قَيُّومُ برحمتك أستغيث", "count": 1, "source": "رواه الترمذي", "grade": "حسن"}], "evening": [{"id": 1, "text": "أَمْسَيْنَا وَأَمْسَى الْمُلْكُ لِلَّهِ رَبِّ الْعَالَمِينَ", "count": 1, "source": "رواه مسلم", "grade": "صحيح"}, {"id": 2, "text": "اللَّهُمَّ بِكَ أَمْسَيْنَا وَبِكَ أَصْبَحْنَا وَبِكَ نَحْيَا وَبِكَ نَمُوتُ وَإِلَيْكَ النُّشُور", "count": 1, "source": "رواه الترمذي", "grade": "حسن"}, {"id": 3, "text": "لا إِلَهَ إِلاَّ اللَّهُ وَحْدَهُ لا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ", "count": 10, "source": "رواه البخاري", "grade": "صحيح"}, {"id": 4, "text": "سُبْحَانَ اللَّهِ وَبِحَمْدِهِ، سُبْحَانَ اللَّهِ الْعَظِيمِ", "count": 100, "source": "رواه مسلم", "grade": "صحيح"}, {"id": 5, "text": "اللَّهُمَّ إِنِّي أَسْأَلُكَ الْعَافِيَةَ فِي الدُّنْيَا وَالآخِرَةِ", "count": 1, "source": "رواه الترمذي", "grade": "حسن"}, {"id": 6, "text": "أَعُوذُ بِاللَّهِ السَّمِيعِ الْعَلِيمِ مِنَ الشَّيْطَانِ الرَّجِيمِ", "count": 1, "source": "رواه البخاري", "grade": "صحيح"}, {"id": 7, "text": "بِسْمِ اللَّهِ الَّذِي لا يَضُرُّ مَعَ اسْمِهِ شَيْءٌ فِي الأَرْضِ وَلا فِي السَّمَاءِ", "count": 3, "source": "رواه الترمذي", "grade": "حسن"}, {"id": 8, "text": "الْحَمْدُ لِلَّهِ الَّذِي أَمْسَيْنَا وَإِلَيْهِ الْمَصِيرُ", "count": 1, "source": "رواه أبو داود", "grade": "صحيح"}, {"id": 9, "text": "يَا أَرْحَمَ الرَّاحِمِينَ برحمتك استغيث", "count": 1, "source": "رواه الترمذي", "grade": "حسن"}]};
+
+let activeTab = 'morning';
+let counters = {}; // { morning: {id: currentCount}, evening: {...} }
+
+function initCounters(){
+  ['morning','evening'].forEach(tab=>{
+    counters[tab] = {};
+    AZKAR_DATA[tab].forEach(z=> counters[tab][z.id] = 0);
+  });
+}
+
+function render(){
+  const list = AZKAR_DATA[activeTab];
+  const wrap = document.getElementById('list');
+  wrap.innerHTML = list.map(z=>{
+    const c = counters[activeTab][z.id];
+    const done = c >= z.count;
+    return `
+      <div class="zikr-card ${done?'done':''}" data-id="${z.id}">
+        <div class="zikr-text">${z.text}</div>
+        <div class="zikr-meta">
+          <span class="zikr-source">${z.source} — ${z.grade}</span>
+          <div class="counter">
+            <span class="count-num">${c}</span>
+            <span class="count-target">/ ${z.count}</span>
+          </div>
+        </div>
+        ${z.virtue ? `<div class="zikr-virtue">💫 ${z.virtue}</div>` : ''}
+      </div>`;
+  }).join('') + `<p class="tap-hint">اضغط على البطاقة لعدّ التكرار</p>`;
+
+  wrap.querySelectorAll('.zikr-card').forEach(card=>{
+    card.addEventListener('click', ()=>{
+      const id = parseInt(card.dataset.id,10);
+      const z = list.find(x=>x.id===id);
+      counters[activeTab][id] = (counters[activeTab][id] + 1) % (z.count + 1);
+      render();
+      updateProgress();
+    });
+  });
+}
+
+function updateProgress(){
+  const list = AZKAR_DATA[activeTab];
+  const total = list.reduce((s,z)=>s+z.count,0);
+  const done = list.reduce((s,z)=>s+Math.min(counters[activeTab][z.id], z.count),0);
+  document.getElementById('progressText').textContent = `${done} / ${total}`;
+  document.getElementById('progressFill').style.width = `${total? (done/total*100):0}%`;
+}
+
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    activeTab = tab.dataset.t;
+    render();
+    updateProgress();
+  });
+});
+
+document.getElementById('resetBtn').addEventListener('click', ()=>{
+  initCounters();
+  render();
+  updateProgress();
+});
+
+initCounters();
+render();
+updateProgress();
+</script>
+</body>
+</html>
