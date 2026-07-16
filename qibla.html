@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>اتجاه القبلة — الرفيق</title>
+<link rel="stylesheet" href="./style.css">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧭</text></svg>">
+<style>
+  .container{max-width:520px;margin:0 auto;padding:16px;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 0;}
+  .back{color:var(--primary);text-decoration:none;font-size:14px;font-weight:600;}
+  h1{text-align:center;font-size:26px;color:var(--primary);margin:6px 0 2px;}
+  .sub{text-align:center;color:#888;font-size:14px;margin-bottom:24px;}
+
+  #permissionCard{background:var(--card);border-radius:var(--radius);border:1px solid var(--line);
+    padding:26px 22px;text-align:center;}
+  #permissionCard button{background:var(--primary);color:#fff;border:none;border-radius:14px;
+    padding:14px 26px;font-size:15px;font-weight:700;cursor:pointer;margin-top:14px;}
+  #permissionCard p{color:#888;font-size:14px;}
+
+  .compass-wrap{display:none;text-align:center;}
+  .compass-ring{
+    position:relative;width:280px;height:280px;margin:0 auto 20px;
+    border-radius:50%;background:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cg fill='none' stroke='%230d6b6e' stroke-width='0.6' opacity='0.08'%3E%3Cpolygon points='100,20 137,63 180,70 150,105 158,150 100,130 42,150 50,105 20,70 63,63'/%3E%3Ccircle cx='100' cy='100' r='75'/%3E%3C/g%3E%3C/svg%3E") center/70% no-repeat,
+      radial-gradient(circle at 50% 40%,#ffffff,#f3f1ea);
+    border:6px solid var(--card);box-shadow:0 10px 30px rgba(0,0,0,0.12), inset 0 0 0 2px var(--line);
+  }
+  .compass-marks{position:absolute;inset:0;}
+  .mark{position:absolute;left:50%;top:6px;width:2px;height:14px;background:#ccc;
+    transform-origin:1px 134px;}
+  .dir-label{position:absolute;font-size:13px;font-weight:700;color:#999;}
+  .n-label{top:14px;left:50%;transform:translateX(-50%);color:var(--primary);}
+  .e-label{right:14px;top:50%;transform:translateY(-50%);}
+  .s-label{bottom:14px;left:50%;transform:translateX(-50%);}
+  .w-label{left:14px;top:50%;transform:translateY(-50%);}
+
+  .needle{
+    position:absolute;left:50%;top:50%;width:6px;height:110px;
+    transform-origin:50% 100%;transform:translate(-50%,-100%) rotate(0deg);
+    transition:transform .15s linear;
+  }
+  .needle::before{content:'';position:absolute;top:0;left:0;width:0;height:0;
+    border-left:10px solid transparent;border-right:10px solid transparent;
+    border-bottom:22px solid var(--gold);left:-7px;}
+  .needle::after{content:'';position:absolute;top:22px;left:-3px;width:6px;height:88px;
+    background:linear-gradient(var(--gold),#ddd);}
+  .kaaba-icon{position:absolute;left:50%;top:50%;transform:translate(-50%,-100%);
+    margin-top:-46px;font-size:26px;}
+  .center-dot{position:absolute;left:50%;top:50%;width:14px;height:14px;border-radius:50%;
+    background:var(--primary);transform:translate(-50%,-50%);box-shadow:0 0 0 4px #fff;}
+
+  .qibla-info{background:var(--card);border-radius:14px;border:1px solid var(--line);
+    padding:16px;margin-bottom:14px;}
+  .qibla-angle{font-size:32px;font-weight:800;color:var(--primary);}
+  .qibla-label{font-size:13px;color:#888;margin-top:4px;}
+  .aligned-msg{color:var(--gold);font-weight:700;font-size:14px;margin-top:6px;display:none;}
+  .stability-badge{font-size:11.5px;color:#999;margin-top:8px;}
+  .stability-badge.good{color:#2e8b57;}
+  .stability-badge.jittery{color:#c0392b;}
+
+  .note{font-size:12px;color:#aaa;line-height:1.7;margin-top:10px;}
+  footer{text-align:center;padding:24px 0 10px;color:#aaa;font-size:12px;}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="topbar">
+    <a class="back" href="./index.html">→ الرئيسية</a>
+    <span style="font-size:22px;">🧭</span>
+  </div>
+  <h1>اتجاه القبلة</h1>
+  <p class="sub">وجّه هاتفك نحو الأعلى ودُرْ حتى يشير المؤشر الذهبي لأيقونة الكعبة</p>
+
+  <div id="permissionCard">
+    <p>🧭 يحتاج البوصلة إلى إذن الوصول لموقعك واتجاه الجهاز</p>
+    <button id="startBtn">تفعيل البوصلة</button>
+  </div>
+
+  <div class="compass-wrap" id="compassWrap">
+    <div class="qibla-info">
+      <div class="qibla-angle" id="qiblaAngle">—</div>
+      <div class="qibla-label">زاوية القبلة من الشمال (اتجاه ثابت لموقعك)</div>
+      <div class="aligned-msg" id="alignedMsg">✅ أنت متجه الآن نحو القبلة</div>
+      <div class="stability-badge" id="stabilityBadge">📡 يجري تقييم استقرار الحساس...</div>
+    </div>
+
+    <div class="compass-ring">
+      <div class="compass-marks"></div>
+      <div class="dir-label n-label">ش</div>
+      <div class="dir-label e-label">ق</div>
+      <div class="dir-label s-label">ج</div>
+      <div class="dir-label w-label">غ</div>
+      <div class="needle" id="needle">
+        <span class="kaaba-icon">🕋</span>
+      </div>
+      <div class="center-dot"></div>
+    </div>
+
+    <p class="note">الزاوية محسوبة بدقة جغرافية باتجاه الكعبة المشرفة (مكة المكرمة). إذا لم تتغير البوصلة، حرّك الهاتف على شكل ٨ لمعايرة الحساس المغناطيسي.</p>
+  </div>
+
+  <footer>الرفيق — بوصلة القبلة</footer>
+</div>
+
+<script>
+const KAABA = { lat: 21.4225, lng: 39.8262 };
+
+function bearingToQibla(lat, lng){
+  const toRad = d=>d*Math.PI/180, toDeg = r=>r*180/Math.PI;
+  const φ1 = toRad(lat), φ2 = toRad(KAABA.lat);
+  const Δλ = toRad(KAABA.lng - lng);
+  const y = Math.sin(Δλ) * Math.cos(φ2);
+  const x = Math.cos(φ1)*Math.sin(φ2) - Math.sin(φ1)*Math.cos(φ2)*Math.cos(Δλ);
+  let brng = toDeg(Math.atan2(y,x));
+  return (brng + 360) % 360;
+}
+
+let qiblaBearing = null;
+let usingAbsolute = false;
+
+// تنعيم القراءات (Exponential Moving Average على دائرة 360°) لتقليل تذبذب حساس المغناطيسية الخام
+// ملاحظة أمانة علمية: هذا يقلل الاهتزاز اللحظي، لكنه لا يُصحح الانحراف المغناطيسي (drift)
+// الناتج عن تشويش معدني قريب — لذلك تبقى حركة "٨" لمعايرة الحساس ضرورية فعلياً، لا شكلية.
+let smoothedHeading = null;
+const SMOOTHING = 0.15; // كلما صغرت زادت سلاسة الحركة وقلّت الاستجابة الفورية
+function smoothAngle(prev, next, factor){
+  if(prev === null) return next;
+  let diff = ((next - prev + 540) % 360) - 180; // أقصر مسار دائري بين الزاويتين
+  return (prev + factor * diff + 360) % 360;
+}
+
+function startCompass(){
+  navigator.geolocation.getCurrentPosition(pos=>{
+    qiblaBearing = bearingToQibla(pos.coords.latitude, pos.coords.longitude);
+    document.getElementById('qiblaAngle').textContent = `${Math.round(qiblaBearing)}°`;
+    document.getElementById('permissionCard').style.display = 'none';
+    document.getElementById('compassWrap').style.display = 'block';
+    attachOrientation();
+  }, ()=>{
+    alert('تعذّر تحديد موقعك. تأكد من تفعيل خدمة الموقع في المتصفح.');
+  }, { enableHighAccuracy:true });
+}
+
+let lastRawHeading = null;
+let jitterEMA = 0;
+
+function attachOrientation(){
+  function handler(e){
+    let heading;
+    if(e.webkitCompassHeading !== undefined){
+      heading = e.webkitCompassHeading; // iOS, already 0=N clockwise
+    } else if(e.alpha !== null){
+      heading = 360 - e.alpha; // Android approximation
+    } else {
+      return;
+    }
+
+    if(lastRawHeading !== null){
+      let rawDiff = Math.abs(((heading - lastRawHeading + 540) % 360) - 180);
+      jitterEMA = jitterEMA*0.9 + rawDiff*0.1;
+      const badge = document.getElementById('stabilityBadge');
+      if(jitterEMA < 1.5){
+        badge.textContent = '✅ الحساس مستقر — القراءة موثوقة';
+        badge.className = 'stability-badge good';
+      } else if(jitterEMA < 4){
+        badge.textContent = '📡 استقرار متوسط';
+        badge.className = 'stability-badge';
+      } else {
+        badge.textContent = '⚠️ تذبذب مرتفع — حرّك الهاتف على شكل ٨ للمعايرة';
+        badge.className = 'stability-badge jittery';
+      }
+    }
+    lastRawHeading = heading;
+
+    smoothedHeading = smoothAngle(smoothedHeading, heading, SMOOTHING);
+    const needleRotation = (qiblaBearing - smoothedHeading + 360) % 360;
+    document.getElementById('needle').style.transform =
+      `translate(-50%,-100%) rotate(${needleRotation}deg)`;
+
+    const diff = Math.min(Math.abs(needleRotation), 360-Math.abs(needleRotation));
+    document.getElementById('alignedMsg').style.display = diff < 6 ? 'block' : 'none';
+  }
+
+  if(typeof DeviceOrientationEvent !== 'undefined' &&
+     typeof DeviceOrientationEvent.requestPermission === 'function'){
+    DeviceOrientationEvent.requestPermission().then(state=>{
+      if(state === 'granted'){
+        window.addEventListener('deviceorientationabsolute', handler, true);
+        window.addEventListener('deviceorientation', handler, true);
+      } else {
+        alert('تم رفض إذن اتجاه الجهاز. لن يعمل المؤشر الحي، لكن الزاوية المحسوبة أعلاه صحيحة.');
+      }
+    }).catch(()=>{});
+  } else {
+    window.addEventListener('deviceorientationabsolute', handler, true);
+    window.addEventListener('deviceorientation', handler, true);
+  }
+}
+
+document.getElementById('startBtn').addEventListener('click', startCompass);
+</script>
+</body>
+</html>
