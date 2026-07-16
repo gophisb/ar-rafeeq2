@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>القرآن الكريم - الرفيق</title>
+  <style>
+    body { font-family: 'Amiri', serif; background: #080B10; color: #F1EFE9; padding: 20px; direction: rtl; }
+    input { padding: 10px; font-size: 16px; width: 100%; margin-bottom: 20px; background: #111; color: #fff; border: 1px solid #D4AF37; border-radius: 8px; }
+    ul { list-style: none; padding: 0; }
+    li { padding: 12px; border-bottom: 1px solid #333; cursor: pointer; }
+    .surah-name { font-weight: bold; color: #D4AF37; }
+    .ayah { color: #ccc; }
+  </style>
+</head>
+<body>
+  <h1>📖 القرآن الكريم</h1>
+  <input type="text" id="search" placeholder="ابحث عن آية...">
+  <div id="results"></div>
+
+  <script>
+    let quranData = [];
+    // تحميل ملف quran.json (يجب أن يكون بنفس المجلد)
+    fetch('./quran.json')
+      .then(r => r.json())
+      .then(data => {
+        quranData = data;
+        displaySurahs();
+      });
+
+    function displaySurahs(filter = '') {
+      const container = document.getElementById('results');
+      container.innerHTML = '';
+      quranData.forEach(surah => {
+        surah.ayahs.forEach(ayah => {
+          if (filter && !ayah.text.includes(filter)) return;
+          const div = document.createElement('div');
+          div.className = 'ayah';
+          div.innerHTML = `<span class="surah-name">${surah.name} (${ayah.numberInSurah})</span> : ${ayah.text}`;
+          container.appendChild(div);
+        });
+      });
+    }
+
+    document.getElementById('search').addEventListener('input', function(e) {
+      displaySurahs(e.target.value.trim());
+    });
+  </script>
+</body>
+</html>
