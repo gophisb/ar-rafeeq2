@@ -1,24 +1,57 @@
 {
-  "name": "الرفيق - Rafeeq",
+  "name": "الرفيق - رفيقك إلى الخير",
   "short_name": "الرفيق",
-  "description": "تطبيق إسلامي شامل: مواقيت الصلاة، الأذان، القرآن، الأذكار، القبلة",
+  "description": "تطبيق إسلامي شامل: القرآن، الأذكار، الأربعين النووية، القبلة، ومواقيت الصلاة",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#080B10",
-  "theme_color": "#0F5C3E",
-  "orientation": "any",
-  "dir": "rtl",
+  "theme_color": "#D4AF37",
+  "orientation": "portrait",
   "lang": "ar",
+  "dir": "rtl",
+  "categories": ["lifestyle", "utilities", "books"],
   "icons": [
     {
       "src": "./icons/icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
       "src": "./icons/icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "📖 القرآن الكريم",
+      "short_name": "القرآن",
+      "description": "اقرأ القرآن الكريم كاملاً",
+      "url": "./quran.html",
+      "icons": [{ "src": "./assets/quran.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "📿 الأذكار",
+      "short_name": "الأذكار",
+      "description": "أذكار الصباح والمساء",
+      "url": "./azkar.html",
+      "icons": [{ "src": "./assets/tasbih.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "🕋 مواقيت الصلاة",
+      "short_name": "الصلاة",
+      "description": "مواقيت الصلاة ودعاء الأذان",
+      "url": "./prayer.html",
+      "icons": [{ "src": "./assets/mawaqit_q.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "🧭 القبلة",
+      "short_name": "القبلة",
+      "description": "اتجاه القبلة الدقيق",
+      "url": "./qibla.html",
+      "icons": [{ "src": "./assets/qibla_q.png", "sizes": "96x96" }]
     }
   ]
 }
