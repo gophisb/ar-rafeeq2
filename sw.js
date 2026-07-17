@@ -1,13 +1,14 @@
 // sw.js — الرفيق: Service Worker للعمل دون اتصال بالإنترنت
-// النسخة 4: مُحسَّنة لتتوافق مع الواجهة الجديدة (SVG مضمّن) وتتحمّل أخطاء التحميل
-const CACHE_NAME = 'ar-rafeeq-v9';
+// النسخة 10: إصلاح مسار الأذان + إضافة manifest.json + تحسينات على استراتيجية التخزين
+const CACHE_NAME = 'ar-rafeeq-v10';
 const TAFSIR_CACHE = 'ar-rafeeq-tafsir-v1'; // كاش دائم للتفسير الميسّر
 
-// قائمة الملفات الأساسية التي يعتمد عليها التطبيق (بدون صور assets/ لأنها استُبدلت بـ SVG)
+// قائمة الملفات الأساسية التي يعتمد عليها التطبيق
 const APP_SHELL = [
   './',
   './index.html',
   './style.css',
+  './manifest.json',
   './prayer.html',
   './azkar.html',
   './arbaeen.html',
@@ -16,7 +17,7 @@ const APP_SHELL = [
   './qibla.html',
   './hisnul.html',
   './quran-local.json',
-  './audio/adhan.mp3'
+  './adhan.mp3'          // تم تصحيح المسار: الملف في الجذر وليس داخل audio/
 ];
 
 // ----- التثبيت: تخزين APP_SHELL دون فشل كامل إذا تعذّر ملف واحد -----
@@ -51,12 +52,15 @@ self.addEventListener('activate', (event) => {
 
 // ----- استراتيجيات التحميل حسب نوع المورد -----
 self.addEventListener('fetch', (event) => {
+  // نتعامل فقط مع طلبات GET (Cache API لا يدعم POST/PUT..)
+  if (event.request.method !== 'GET') return;
+
   const url = new URL(event.request.url);
   const isSameOrigin = url.origin === self.location.origin;
   const isTafsirApi = url.hostname === 'api.alquran.cloud';
   const isPrayerApi = url.hostname === 'api.aladhan.com';
 
-  // 1) موارد التطبيق المحلية (شبكة أولاً، مع تخزين في الكاش)
+  // 1) موارد التطبيق المحلية (شبكة أولاً، مع تخزين في الكاش، وسقوط على الكاش عند الفشل)
   if (isSameOrigin) {
     event.respondWith(
       fetch(event.request)
@@ -65,7 +69,16 @@ self.addEventListener('fetch', (event) => {
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
           return response;
         })
-        .catch(() => caches.match(event.request).then((cached) => cached || caches.match('./index.html')))
+        .catch(() =>
+          caches.match(event.request).then((cached) => {
+            if (cached) return cached;
+            // fallback نهائي لطلبات التنقل بين الصفحات (navigation)
+            if (event.request.mode === 'navigate') {
+              return caches.match('./index.html');
+            }
+            return Response.error();
+          })
+        )
     );
     return;
   }
@@ -85,7 +98,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 3) مواقيت الصلاة (شبكة أولاً إلزامياً لأنها تتغير)
+  // 3) مواقيت الصلاة (شبكة أولاً إلزامياً لأنها تتغير يوميًا)
   if (isPrayerApi) {
     event.respondWith(
       fetch(event.request)
